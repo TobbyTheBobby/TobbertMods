@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>AutomaticBeaverTransfer</AssemblyName>
+    <Description>My first plugin</Description>
+    <Version>2021.1.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+    <PackageReference Include="TimberAPI" Version="0.3.3" />
+    <PackageReference Include="UnityEngine.Modules" Version="2021.3.1" IncludeAssets="compile" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <BepInExPluginPath>$(SolutionDir)Timberborn\BepInEx\plugins\</BepInExPluginPath>
+  </PropertyGroup>
+
+  <Target Name="CopyToThunderPackage" BeforeTargets="AfterBuild">
+    <Message Text="### Copying dll to timberborn thunderstore package ###" Importance="high" />
+    <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="$(ProjectDir)ThunderstorePackage\$(ProjectName)\plugins" />
+  </Target>
+
+  <Target Name="CopyPluginToTimberborn" BeforeTargets="AfterBuild">
+    <Message Text="### Copying mod to timberborn plugin folder ### $(ProjectDir)" Importance="high" />
+    <ItemGroup>
+      <TimberModPluginFiles Include="$(ProjectDir)ThunderstorePackage\$(ProjectName)\plugins\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(TimberModPluginFiles)" DestinationFolder="$(BepInExPluginPath)$(ProjectName)" />
+  </Target>
+
+  <ItemGroup>
+    <Reference Include="$(SolutionDir)Timberborn\Timberborn_Data\Managed\Timberborn.*.dll" Exclude="$(SolutionDir)Timberborn\Timberborn_Data\Managed\Timberborn.GameDistrictsUI.dll;$(SolutionDir)Timberborn\Timberborn_Data\Managed\Timberborn.WorkSystemUI.dll">
+      <DestinationSubDirectory>libs\</DestinationSubDirectory>
+    </Reference>
+    <Reference Include="$(SolutionDir)Timberborn\Timberborn_Data\Managed\Bindito.*.dll">
+      <DestinationSubDirectory>libs\</DestinationSubDirectory>
+    </Reference>
+    <Reference Include="$(SolutionDir)Timberborn\Timberborn_Data\Managed\Newtonsoft.Json.dll">
+      <DestinationSubDirectory>libs\</DestinationSubDirectory>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TimberAPI\TimberAPI\TimberAPI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Timberborn.GameDistrictsUI\Timberborn.GameDistrictsUI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Timberborn.WorkSystemUI\Timberborn.WorkSystemUI.csproj" />
+  </ItemGroup>
+</Project>
