@@ -8,7 +8,7 @@ This plugin is currently only supported in the **experimental** version of Timbe
 ## How to use
 The will add a simple UI fragment on the District UI. Example image below.
 
-![DistrictUI](./attachments/DistrictCenterUI.png)
+![DistrictUI](https://github.com/TobbyTheBobby/TobbertMods/blob/main/AutomaticBeaverMigration/attachments/DistrictCenterUI.png?raw=true)
 
 ### Main toggle
 The toggle at the top lets you enable or disable the automatic migration in case of emergency.
