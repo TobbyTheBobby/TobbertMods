@@ -2,6 +2,7 @@ using System.Reflection;
 using HarmonyLib;
 using Timberborn.Golems;
 using Timberborn.Reproduction;
+using TimberbornAPI;
 
 namespace AutomaticBeaverMigration;
 
@@ -15,7 +16,6 @@ public static class ReplaceGolemCreatedPatch
     
     private static void Postfix()
     {
-        AutomaticBeaverMigrationPlugin.Log.LogFatal("ReplaceCharacterCreatedPatch");
-        // TimberAPI.DependencyContainer.GetInstance<BeaverMigrationController>().MigrateExcessBeavers();
+        TimberAPI.DependencyContainer.GetInstance<BeaverMigrationController>().MigrateExcessBeavers();
     }
 }

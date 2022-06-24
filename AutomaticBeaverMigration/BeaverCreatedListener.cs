@@ -1,6 +1,7 @@
 using System.Reflection;
 using HarmonyLib;
 using Timberborn.Reproduction;
+using TimberbornAPI;
 
 namespace AutomaticBeaverMigration;
 
@@ -14,7 +15,6 @@ public static class ReplaceBeaverCreatedPatch
     
     private static void Postfix()
     {
-        AutomaticBeaverMigrationPlugin.Log.LogFatal("ReplaceCharacterCreatedPatch");
-        // TimberAPI.DependencyContainer.GetInstance<BeaverMigrationController>().MigrateExcessBeavers();
+        TimberAPI.DependencyContainer.GetInstance<BeaverMigrationController>().MigrateExcessBeavers();
     }
 }

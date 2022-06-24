@@ -1,6 +1,6 @@
 {
   "name": "AutomaticBeaverMigration",
-  "version_number": "0.1.1",
+  "version_number": "0.1.2",
   "website_url": "https://github.com/TobbyTheBobby/TobbertMods",
   "description": "Automates migration of beavers between districts",
   "dependencies": [

@@ -34,5 +34,11 @@ In case you experience problems, message me in modding channel of the the Timber
 
 ## Changelog
 
+### 0.1.2 - 24.6.2022
+- Fixed listener events.
+
+### 0.1.1 - 24.6.2022
+- Fixed image not working.
+
 ### 0.1.0 - 24.6.2022
 - Released the plugin.

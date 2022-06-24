@@ -16,7 +16,6 @@ public static class ReplaceCharacterKilledPatch
     
     private static void Postfix()
     {
-        AutomaticBeaverMigrationPlugin.Log.LogFatal("ReplaceCharacterKilledPatch");
-        // TimberAPI.DependencyContainer.GetInstance<BeaverMigrationController>().MigrateExcessBeavers();
+        TimberAPI.DependencyContainer.GetInstance<BeaverMigrationController>().MigrateExcessBeavers();
     }
 }

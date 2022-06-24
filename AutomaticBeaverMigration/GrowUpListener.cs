@@ -15,7 +15,6 @@ public static class ReplaceGrowUpPatch
     
     private static void Postfix()
     {
-        AutomaticBeaverMigrationPlugin.Log.LogFatal("Postfix");
         TimberAPI.DependencyContainer.GetInstance<BeaverMigrationController>().MigrateExcessBeavers();
     }
 }
