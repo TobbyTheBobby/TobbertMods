@@ -26,20 +26,19 @@ namespace AutomaticBeaverMigration
         
         private class EntityPanelModuleProvider : IProvider<EntityPanelModule>
         {
-            private readonly AutomaticBeaverMigrationUI _fragment;
+            private readonly AutomaticBeaverMigrationUI _automaticBeaverMigrationUI;
 
             public EntityPanelModuleProvider(
-                AutomaticBeaverMigrationUI fragmentExample 
+                AutomaticBeaverMigrationUI automaticBeaverMigrationUI 
                 )
             {
-                _fragment = fragmentExample;
+                _automaticBeaverMigrationUI = automaticBeaverMigrationUI;
             }
         
             public EntityPanelModule Get()
             {
                 EntityPanelModule.Builder builder = new EntityPanelModule.Builder();
-                builder.AddMiddleFragment(_fragment);
-                // builder.AddBottomFragment(_stockpileInventoryFragment);
+                builder.AddMiddleFragment(_automaticBeaverMigrationUI);
                 return builder.Build();
             }
         }

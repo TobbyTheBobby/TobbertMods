@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Bindito.Core;
 using Timberborn.Characters;
 using Timberborn.EntitySystem;
 using Timberborn.GameDistricts;
@@ -7,50 +6,25 @@ using Timberborn.GameDistrictsUI;
 using Timberborn.Persistence;
 using Timberborn.PrioritySystem;
 using Timberborn.SingletonSystem;
-using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace AutomaticBeaverMigration;
 
-public class BeaverMigrationController : MonoBehaviour, ISaveableSingleton, ILoadableSingleton
+public class BeaverMigrationController : ISaveableSingleton, ILoadableSingleton
 {
     private static readonly SingletonKey BeaverMigrationControllerKey = new (nameof(BeaverMigrationController));
     private static readonly PropertyKey<bool> ControllerEnabledKey = new (nameof(ControllerEnabled));
     
-    private MigrationService _migrationService;
-    private EntityComponentRegistry _entityComponentRegistry;
-    private ISingletonLoader _singletonLoader;
-    
-    private readonly List<DistrictCenter> _migratableDistrictList = new ();
-    private readonly List<DistrictCenter> _orderedMigratableDistrictList = new ();
-    private readonly List<DesiredBeavers> _desiredBeaversList = new ();
-    private readonly List<DesiredBeavers> _orderedDesiredBeaversList = new ();
-    private DistrictCenter _sourceDistrict;
-    private DistrictCenter _targetDistrict;
-    private DistrictPopulation _districtPopulation;
-    private DesiredBeavers _desiredBeavers;
+    private readonly MigrationService _migrationService;
+    private readonly EntityComponentRegistry _entityComponentRegistry;
+    private readonly ISingletonLoader _singletonLoader;
+    private readonly EventBus _eventBus;
 
-    private int _excessAdults;
-    private int _excessChildren;
-    private int _excessGolems;
-    
-    private int _neededAdults;
-    private int _neededChildren;
-    private int _neededGolems;
-    
-    private int _migratingAdults;
-    private int _migratingChildren;
-    private int _migratingsGolems;
+    private DesiredBeavers _desiredBeavers;
 
     private bool ControllerEnabled { get; set; }
     public bool ControllerToggled => ControllerEnabled;
     
-    private EventBus _eventBus;
-    public BeaverMigrationController(EventBus eventBus) => _eventBus = eventBus;
-
-
-    [Inject]
-    public void InjectDependencies(MigrationService migrationService, EntityComponentRegistry entityComponentRegistry, ISingletonLoader singletonLoader, EventBus eventBus)
+    public BeaverMigrationController(MigrationService migrationService, EntityComponentRegistry entityComponentRegistry, ISingletonLoader singletonLoader, EventBus eventBus)
     {
         _migrationService = migrationService;
         _entityComponentRegistry = entityComponentRegistry;
@@ -60,99 +34,95 @@ public class BeaverMigrationController : MonoBehaviour, ISaveableSingleton, ILoa
 
     public void MigrateExcessBeavers()
     {
+        List<DesiredBeavers> desiredBeaversList = new ();
+        List<DesiredBeavers> orderedDesiredBeaversList = new ();
+
         if (!ControllerEnabled) return;
-        _desiredBeaversList.AddRange(_entityComponentRegistry.GetEnabled<DesiredBeavers>());
+        desiredBeaversList.AddRange(_entityComponentRegistry.GetEnabled<DesiredBeavers>());
 
         foreach (var priority in Priorities.Ascending)
         {
-            foreach (DesiredBeavers desiredBeavers in _desiredBeaversList)
+            foreach (DesiredBeavers desiredBeavers in desiredBeaversList)
             {
                 if (desiredBeavers.Priority == priority)
                 {
-                    _orderedDesiredBeaversList.Add(desiredBeavers);
+                    orderedDesiredBeaversList.Add(desiredBeavers);
                 }
             }
         }
 
-        foreach (var desiredBeavers in _orderedDesiredBeaversList)
+        foreach (var desiredBeavers in orderedDesiredBeaversList)
         {
-            _districtPopulation = desiredBeavers.gameObject.GetComponent<DistrictPopulation>();
+            var districtPopulation = desiredBeavers.gameObject.GetComponent<DistrictPopulation>();
 
-            _excessAdults = _districtPopulation.NumberOfAdults - desiredBeavers.DesiredAmountOfAdults;
-            _excessChildren = _districtPopulation.NumberOfChildren - desiredBeavers.DesiredAmountOfChildren;
-            _excessGolems = _districtPopulation.NumberOfGolems - desiredBeavers.DesiredAmountOfGolems;
+            var excessAdults = districtPopulation.NumberOfAdults - desiredBeavers.DesiredAmountOfAdults;
+            var excessChildren = districtPopulation.NumberOfChildren - desiredBeavers.DesiredAmountOfChildren;
+            var excessGolems = districtPopulation.NumberOfGolems - desiredBeavers.DesiredAmountOfGolems;
 
-
-            _excessAdults = _excessAdults < 0 ? 0 : _excessAdults;
-            _excessChildren = _excessChildren < 0 ? 0 : _excessChildren;
-            _excessGolems = _excessGolems < 0 ? 0 : _excessGolems;
+            excessAdults = excessAdults < 0 ? 0 : excessAdults;
+            excessChildren = excessChildren < 0 ? 0 : excessChildren;
+            excessGolems = excessGolems < 0 ? 0 : excessGolems;
             
-            _sourceDistrict = desiredBeavers.gameObject.GetComponent<DistrictCenter>();
-            _migratableDistrictList.AddRange(_migrationService.ValidMigrationTargets(_sourceDistrict));
+            var sourceDistrict = desiredBeavers.gameObject.GetComponent<DistrictCenter>();
+            
+            List<DistrictCenter> migratableDistrictList = new ();
+            List<DistrictCenter> orderedMigratableDistrictList = new ();
+            migratableDistrictList.AddRange(_migrationService.ValidMigrationTargets(sourceDistrict));
 
             foreach (var priority in Priorities.Descending)
             {
-                foreach (var districtCenter in _migratableDistrictList)
+                foreach (var districtCenter in migratableDistrictList)
                 {
                     _desiredBeavers = districtCenter.gameObject.GetComponent<DesiredBeavers>();
                     if (_desiredBeavers.Priority == priority)
                     {
-                        _orderedMigratableDistrictList.Add(districtCenter);
+                        orderedMigratableDistrictList.Add(districtCenter);
                     }
                 }
             }
 
-            foreach (var migratableDistrict in _orderedMigratableDistrictList)
+            foreach (var migratableDistrict in orderedMigratableDistrictList)
             {
-                if (_excessAdults <= 0 && _excessChildren <= 0 && _excessGolems <= 0) continue;
-                _districtPopulation = migratableDistrict.gameObject.GetComponent<DistrictPopulation>();
+                if (excessAdults <= 0 && excessChildren <= 0 && excessGolems <= 0) continue;
+                districtPopulation = migratableDistrict.gameObject.GetComponent<DistrictPopulation>();
                 _desiredBeavers = migratableDistrict.gameObject.GetComponent<DesiredBeavers>();
-                _targetDistrict = migratableDistrict.gameObject.GetComponent<DistrictCenter>();
+                var targetDistrict = migratableDistrict.gameObject.GetComponent<DistrictCenter>();
 
-                _neededAdults = _desiredBeavers.DesiredAmountOfAdults - _districtPopulation.NumberOfAdults;
-                _neededChildren = _desiredBeavers.DesiredAmountOfChildren - _districtPopulation.NumberOfChildren;
-                _neededGolems = _desiredBeavers.DesiredAmountOfGolems - _districtPopulation.NumberOfGolems;
+                var neededAdults = _desiredBeavers.DesiredAmountOfAdults - districtPopulation.NumberOfAdults;
+                var neededChildren = _desiredBeavers.DesiredAmountOfChildren - districtPopulation.NumberOfChildren;
+                var neededGolems = _desiredBeavers.DesiredAmountOfGolems - districtPopulation.NumberOfGolems;
                 
-                _neededAdults = _neededAdults < 0 ? 0 : _neededAdults;
-                _neededChildren = _neededChildren < 0 ? 0 : _neededChildren;
-                _neededGolems = _neededAdults < 0 ? 0 : _neededGolems;
+                neededAdults = neededAdults < 0 ? 0 : neededAdults;
+                neededChildren = neededChildren < 0 ? 0 : neededChildren;
+                neededGolems = neededGolems < 0 ? 0 : neededGolems;
 
-                _migratingAdults = _neededAdults > _excessAdults ? _excessAdults : _neededAdults;
-                _migratingChildren = _neededChildren > _excessChildren ? _excessChildren : _neededChildren;
-                _migratingsGolems = _neededGolems > _excessGolems ? _excessGolems : _neededGolems;
+                var migratingAdults = neededAdults > excessAdults ? excessAdults : neededAdults;
+                var migratingChildren = neededChildren > excessChildren ? excessChildren : neededChildren;
+                var migratingGolems = neededGolems > excessGolems ? excessGolems : neededGolems;
 
-                _migrationService.Migrate(_sourceDistrict, _targetDistrict, _migratingAdults,
-                    _migratingChildren, _migratingsGolems);
+                _migrationService.Migrate(sourceDistrict, targetDistrict, migratingAdults, migratingChildren, migratingGolems);
 
-                _excessAdults -= _migratingAdults;
-                _excessChildren -= _migratingChildren;
-                _excessGolems -= _migratingsGolems;
+                excessAdults -= migratingAdults;
+                excessChildren -= migratingChildren;
+                excessGolems -= migratingGolems;
             }
-            _orderedMigratableDistrictList.Clear();
-            _targetDistrict = null;
-            _migratableDistrictList.Clear();
         }
-        _orderedDesiredBeaversList.Clear();
-        _sourceDistrict = null;
-        _desiredBeaversList.Clear();
     }
     
-    // [OnEvent]
-    // public void OnCharacterKilled(CharacterKilledEvent characterKilledEvent)
-    // {
-    //     if (!ControllerEnabled) return;
-    //     MigrateExcessBeavers();
-    //     AutomaticBeaverMigrationPlugin.Log.LogFatal("a baby");
-    // }
-    //
-    // [OnEvent]
-    // public void OnCharacterCreated(CharacterCreatedEvent characterCreated)
-    // {
-    //     if (!ControllerEnabled) return;
-    //     MigrateExcessBeavers();
-    //     AutomaticBeaverMigrationPlugin.Log.LogFatal("ohno, i died");
-    // }
+    [OnEvent]
+    public void OnCharacterKilled(CharacterKilledEvent characterKilledEvent)
+    {
+        if (!ControllerEnabled) return;
+        MigrateExcessBeavers();
+    }
     
+    [OnEvent]
+    public void OnCharacterCreated(CharacterCreatedEvent characterCreated)
+    {
+        if (!ControllerEnabled) return;
+        MigrateExcessBeavers();
+    }
+
     public void ToggleController(bool value)
     {
         ControllerEnabled = value;

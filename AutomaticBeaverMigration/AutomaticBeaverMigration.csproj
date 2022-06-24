@@ -61,12 +61,12 @@
     <ProjectReference Include="..\Timberborn.WorkSystemUI\Timberborn.WorkSystemUI.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="ThunderstorePackage\AutomaticBeaverMigration\plugins\lang\**" />
+    <Compile Remove="ThunderstorePackage\**" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Remove="ThunderstorePackage\AutomaticBeaverMigration\plugins\lang\**" />
+    <EmbeddedResource Remove="ThunderstorePackage\**" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="ThunderstorePackage\AutomaticBeaverMigration\plugins\lang\**" />
+    <None Remove="ThunderstorePackage\**" />
   </ItemGroup>
 </Project>
