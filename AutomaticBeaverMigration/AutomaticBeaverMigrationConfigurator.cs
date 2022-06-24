@@ -4,18 +4,17 @@ using Timberborn.EntityPanelSystem;
 using Timberborn.GameDistricts;
 using Timberborn.TemplateSystem;
 
-namespace AutomaticBeaverTransfer
+namespace AutomaticBeaverMigration
 {
-    internal class AutomaticBeaverTransferConfigurator : IConfigurator
+    internal class AutomaticBeaverMigrationConfigurator : IConfigurator
     {
 
         public void Configure(IContainerDefinition containerDefinition)
         {
-            // containerDefinition.Bind<StockpileInventoryFragment>().AsSingleton();
-            containerDefinition.Bind<AutomaticBeaverTransferUI>().AsSingleton();
-            containerDefinition.Bind<BeaverTransferController>().AsSingleton();
+            containerDefinition.Bind<AutomaticBeaverMigrationUI>().AsSingleton();
+            containerDefinition.Bind<BeaverMigrationController>().AsSingleton();
             containerDefinition.MultiBind<EntityPanelModule>().ToProvider<EntityPanelModuleProvider>().AsSingleton();
-            containerDefinition.MultiBind<TemplateModule>().ToProvider(new Func<TemplateModule>(AutomaticBeaverTransferConfigurator.ProvideTemplateModule)).AsSingleton();
+            containerDefinition.MultiBind<TemplateModule>().ToProvider(ProvideTemplateModule).AsSingleton();
         }
 
         private static TemplateModule ProvideTemplateModule()
@@ -27,16 +26,13 @@ namespace AutomaticBeaverTransfer
         
         private class EntityPanelModuleProvider : IProvider<EntityPanelModule>
         {
-            private readonly AutomaticBeaverTransferUI _fragment;
-            // private readonly StockpileInventoryFragment _stockpileInventoryFragment;
+            private readonly AutomaticBeaverMigrationUI _fragment;
 
             public EntityPanelModuleProvider(
-                AutomaticBeaverTransferUI fragmentExample 
-                // StockpileInventoryFragment stockpileInventoryFragment
+                AutomaticBeaverMigrationUI fragmentExample 
                 )
             {
                 _fragment = fragmentExample;
-                // _stockpileInventoryFragment = stockpileInventoryFragment;
             }
         
             public EntityPanelModule Get()

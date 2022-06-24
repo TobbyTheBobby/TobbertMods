@@ -14,44 +14,42 @@ using UnityEngine.UIElements;
 using static UnityEngine.UIElements.Length.Unit;
 using Object = UnityEngine.Object;
 
-namespace AutomaticBeaverTransfer
+namespace AutomaticBeaverMigration
 {
-    public class AutomaticBeaverTransferUI : IEntityPanelFragment, IInputProcessor
+    public class AutomaticBeaverMigrationUI : IEntityPanelFragment, IInputProcessor
     {
         private readonly UIBuilder _builder;
-        private readonly BeaverTransferController _beaverTransferController;
+        private readonly BeaverMigrationController _beaverMigrationController;
         private readonly InputService _inputService;
         private readonly WorkplacePriorityToggleFactory _workplacePriorityToggleFactory;
         private DistrictCenter _sourceDistrict;
         private DesiredBeavers _desiredBeavers;
         
-        private Toggle _controlerToggle;
+        private Toggle _controllerToggle;
         
-        private TextField _DesiredNumberOfAdultsField;
-        private TextField _DesiredNumberOfChildrenField;
-        private TextField _DesiredNumberOfGolemsField;
+        private TextField _desiredNumberOfAdultsField;
+        private TextField _desiredNumberOfChildrenField;
+        private TextField _desiredNumberOfGolemsField;
         
-        private Label _CurrentNumberOfAdults; 
-        private Label _CurrentNumberOfChildren; 
-        private Label _CurrentNumberOfGolems;
+        private Label _currentNumberOfAdults; 
+        private Label _currentNumberOfChildren; 
+        private Label _currentNumberOfGolems;
         
-        private readonly List<PriorityToggle> _toggles = new List<PriorityToggle>();
-        private TooltipRegistrar _tooltipRegistrar;
-        private Label _text;
-        private WorkplaceDescriber _workplaceDescriber;
+        private readonly List<PriorityToggle> _toggles = new ();
+        private readonly TooltipRegistrar _tooltipRegistrar;
         
         private VisualElement _root;
 
-        public AutomaticBeaverTransferUI(
+        public AutomaticBeaverMigrationUI(
             UIBuilder builder, 
-            BeaverTransferController beaverTransferController, 
+            BeaverMigrationController beaverMigrationController, 
             InputService inputService, 
             WorkplacePriorityToggleFactory workplacePriorityToggleFactory, 
             TooltipRegistrar tooltipRegistrar,
             VisualElementLoader visualElementLoader)
         {
             _builder = builder;
-            _beaverTransferController = beaverTransferController;
+            _beaverMigrationController = beaverMigrationController;
             _inputService = inputService;
             _workplacePriorityToggleFactory = workplacePriorityToggleFactory;
             _tooltipRegistrar = tooltipRegistrar;
@@ -62,6 +60,15 @@ namespace AutomaticBeaverTransfer
             _root = _builder.CreateFragmentBuilder().SetBackground(TimberApiStyle.Backgrounds.Bg3)
                 .AddComponent(builder => builder.SetFlexDirection(FlexDirection.Row).SetJustifyContent(Justify.Center).SetHeight(30).SetAlignItems(Align.Center)
                     .AddPreset(factory => factory.Toggles().CheckmarkInverted( "ControllerToggle", locKey: "ControllerToggle")))
+                
+                .AddComponent(builder => builder.SetFlexDirection(FlexDirection.Row).SetJustifyContent(Justify.Center).SetHeight(30).SetAlignItems(Align.Center)
+                    .AddComponent(builder => builder.SetFlexDirection(FlexDirection.Row).SetName("Priorities")))
+                
+                .AddComponent(builder => builder.SetFlexDirection(FlexDirection.Row).SetAlignItems(Align.Center)
+                    .AddPreset(factory => factory.Labels().GameTextBig(name:"Type", text: "", builder: builder => builder.SetWidth(170)))
+                    .AddPreset(factory => factory.Labels().GameTextBig(name:"Desired", text: "Desired"))
+                    .AddPreset(factory => factory.Labels().GameTextBig(name:"Separator", text: " / ", builder: builder => builder.SetColor(new Color(0.74f, 0.64f, 0.42f))))
+                    .AddPreset(factory => factory.Labels().GameTextBig(name:"Population", text: "Population")))
                 
                 .AddComponent(builder => builder.SetFlexDirection(FlexDirection.Row).SetAlignItems(Align.Center)
                     .AddPreset(factory => factory.Labels().GameTextBig(name:"Adults", text: "Adults", builder: builder => builder.SetWidth(200)))
@@ -82,34 +89,27 @@ namespace AutomaticBeaverTransfer
                     .AddPreset(factory => factory.Labels().GameTextBig(name:"MaxNumberOfGolems", text: " 0")))
                 
                 .AddComponent(builder => builder.SetFlexDirection(FlexDirection.Row).SetJustifyContent(Justify.Center).SetHeight(60).SetAlignItems(Align.Center)
-                    .AddPreset(factory => factory.Buttons().Button("Force migration", new Length(200, Pixel), name: "ForceTransfer")))
-                
-                .AddPreset(factory => factory.Labels().GameTextBig(name:"Text", text: "Text", builder: builder => builder.SetWidth(200)))
-                .AddPreset(factory => factory.Labels().GameTextBig(name:"Priorities", builder: builder => builder.SetWidth(200)))
-                
+                    .AddPreset(factory => factory.Buttons().Button("Force migration", new Length(200, Pixel), name: "ForceMigration")))
+
                 .BuildAndInitialize();
             
-            _controlerToggle = _root.Q<Toggle>("ControllerToggle");
-            _root.Q<Toggle>("ControllerToggle").RegisterValueChangedCallback(value => _beaverTransferController.ToggleController(value.newValue));
-            _root.Q<Button>("ForceTransfer").clicked += _beaverTransferController.TransferExcessBeavers;
+            _controllerToggle = _root.Q<Toggle>("ControllerToggle");
+            _root.Q<Toggle>("ControllerToggle").RegisterValueChangedCallback(value => _beaverMigrationController.ToggleController(value.newValue));
+            _root.Q<Button>("ForceMigration").clicked += _beaverMigrationController.MigrateExcessBeavers;
             
-            _DesiredNumberOfAdultsField = _root.Q<TextField>("DesiredNumberOfAdults");
-            TextFields.InitializeIntTextField(_DesiredNumberOfAdultsField, 0, midEditingCallback: (value => _desiredBeavers.ChangeDesiredAmountOfAdults(value)));
-            _CurrentNumberOfAdults = _root.Q<Label>("MaxNumberOfAdults");
+            _desiredNumberOfAdultsField = _root.Q<TextField>("DesiredNumberOfAdults");
+            TextFields.InitializeIntTextField(_desiredNumberOfAdultsField, 0, midEditingCallback: (value => _desiredBeavers.ChangeDesiredAmountOfAdults(value)));
+            _currentNumberOfAdults = _root.Q<Label>("MaxNumberOfAdults");
 
-            _DesiredNumberOfChildrenField = _root.Q<TextField>("DesiredNumberOfChildren");
-            TextFields.InitializeIntTextField(_DesiredNumberOfChildrenField, 0, midEditingCallback: (value => _desiredBeavers.ChangeDesiredAmountOfChildren(value)));
-            _CurrentNumberOfChildren = _root.Q<Label>("MaxNumberOfChildren");
+            _desiredNumberOfChildrenField = _root.Q<TextField>("DesiredNumberOfChildren");
+            TextFields.InitializeIntTextField(_desiredNumberOfChildrenField, 0, midEditingCallback: (value => _desiredBeavers.ChangeDesiredAmountOfChildren(value)));
+            _currentNumberOfChildren = _root.Q<Label>("MaxNumberOfChildren");
 
-            _DesiredNumberOfGolemsField = _root.Q<TextField>("DesiredNumberOfGolemsField");
-            TextFields.InitializeIntTextField(_DesiredNumberOfGolemsField, 0, midEditingCallback: (value => _desiredBeavers.ChangeDesiredAmountOfGolems(value)));
-            _CurrentNumberOfGolems = _root.Q<Label>("MaxNumberOfGolems");
-            
-            _text = _root.Q<Label>("Text");
-            _tooltipRegistrar.Register(_text,  () => _workplaceDescriber.GetWorkersTooltip());
-            
-           
-            VisualElement visualElement = _root.Q<Label>("Priorities");
+            _desiredNumberOfGolemsField = _root.Q<TextField>("DesiredNumberOfGolemsField");
+            TextFields.InitializeIntTextField(_desiredNumberOfGolemsField, 0, midEditingCallback: (value => _desiredBeavers.ChangeDesiredAmountOfGolems(value)));
+            _currentNumberOfGolems = _root.Q<Label>("MaxNumberOfGolems");
+
+            VisualElement visualElement = _root.Q<VisualElement>("Priorities");
             _tooltipRegistrar.RegisterLocalizable(visualElement, "Work.PriorityTitle");
             foreach (Priority priority1 in Priorities.Ascending)
             {
@@ -130,46 +130,48 @@ namespace AutomaticBeaverTransfer
                 return;
             _root.ToggleDisplayStyle(true);
             
-            _controlerToggle.value = _beaverTransferController.ControllerToggled;
+            _controllerToggle.value = _beaverMigrationController.ControllerToggled;
             
-            _DesiredNumberOfAdultsField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfAdults.ToString());
-            _DesiredNumberOfChildrenField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfChildren.ToString());
-            _DesiredNumberOfGolemsField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfGolems.ToString());
-
-            _inputService.AddInputProcessor((IInputProcessor) this);
+            _desiredNumberOfAdultsField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfAdults.ToString());
+            _desiredNumberOfChildrenField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfChildren.ToString());
+            _desiredNumberOfGolemsField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfGolems.ToString());
+            
+            _inputService.AddInputProcessor(this);
         }
 
         public void ClearFragment()
         {
             _root.ToggleDisplayStyle(false);
-            _sourceDistrict = (DistrictCenter) null;
-            this._inputService.RemoveInputProcessor((IInputProcessor) this);
+            _sourceDistrict = null;
+            _desiredBeavers = null;
+            _inputService.RemoveInputProcessor(this);
         }
 
         public void UpdateFragment()
         {
             if (!(bool) (Object)  _sourceDistrict)
                 return;
+            UpdateToggles();
             _root.ToggleDisplayStyle(true);
             
             DistrictPopulation districtPopulation = _sourceDistrict.DistrictPopulation;
 
-            _CurrentNumberOfAdults.text = " " + districtPopulation.NumberOfAdults;
-            _CurrentNumberOfChildren.text = " " + districtPopulation.NumberOfChildren;
-            _CurrentNumberOfGolems.text = " " + districtPopulation.NumberOfGolems;
+            _currentNumberOfAdults.text = " " + districtPopulation.NumberOfAdults;
+            _currentNumberOfChildren.text = " " + districtPopulation.NumberOfChildren;
+            _currentNumberOfGolems.text = " " + districtPopulation.NumberOfGolems;
             
-            _DesiredNumberOfAdultsField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfAdults.ToString());
-            _DesiredNumberOfChildrenField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfChildren.ToString());
-            _DesiredNumberOfGolemsField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfGolems.ToString());
+            _desiredNumberOfAdultsField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfAdults.ToString());
+            _desiredNumberOfChildrenField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfChildren.ToString());
+            _desiredNumberOfGolemsField.SetValueWithoutNotify(_desiredBeavers.DesiredAmountOfGolems.ToString());
         }
 
         private bool _desiredAdultsWasFocusedLastFrame;
         private bool _desiredChildrenWasFocusedLastFrame;
         private bool _desiredGolemsWasFocusedLastFrame;
         
-        private bool DesiredAdultsIsFocused => _DesiredNumberOfAdultsField.focusController?.focusedElement == _DesiredNumberOfAdultsField;
-        private bool DesiredChildrenIsFocused => _DesiredNumberOfChildrenField.focusController?.focusedElement == _DesiredNumberOfChildrenField;
-        private bool DesiredGolemsIsFocused => _DesiredNumberOfGolemsField.focusController?.focusedElement == _DesiredNumberOfGolemsField;
+        private bool DesiredAdultsIsFocused => _desiredNumberOfAdultsField.focusController?.focusedElement == _desiredNumberOfAdultsField;
+        private bool DesiredChildrenIsFocused => _desiredNumberOfChildrenField.focusController?.focusedElement == _desiredNumberOfChildrenField;
+        private bool DesiredGolemsIsFocused => _desiredNumberOfGolemsField.focusController?.focusedElement == _desiredNumberOfGolemsField;
         
         public bool ProcessInput()
         {
@@ -202,6 +204,12 @@ namespace AutomaticBeaverTransfer
             if (!value)
                 return;
             _desiredBeavers.SetPriority(priority);
+        }
+        
+        private void UpdateToggles()
+        {
+            foreach (PriorityToggle toggle in _toggles)
+                toggle.UpdateState();
         }
     }
 }

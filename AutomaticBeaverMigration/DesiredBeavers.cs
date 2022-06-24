@@ -4,16 +4,15 @@ using Timberborn.Persistence;
 using Timberborn.PrioritySystem;
 using UnityEngine;
 
-namespace AutomaticBeaverTransfer;
+namespace AutomaticBeaverMigration;
 
 public class DesiredBeavers : MonoBehaviour, IPersistentEntity, IRegisteredComponent
 {
-    private readonly EntityComponentRegistry _entityComponentRegistry;
-    
-    private static readonly ComponentKey DesiredBeaversKey = new ComponentKey(nameof(DesiredBeavers));
-    private static readonly PropertyKey<int> DesiredAmountOfAdultsKey = new PropertyKey<int>(nameof(_desiredAmountOfAdults));
-    private static readonly PropertyKey<int> DesiredAmountOfChildrenKey = new PropertyKey<int>(nameof(_desiredAmountOfChildren));
-    private static readonly PropertyKey<int> DesiredAmountOfGolemsKey = new PropertyKey<int>(nameof(_desiredAmountOfGolems));
+    private static readonly ComponentKey DesiredBeaversKey = new (nameof(DesiredBeavers));
+    private static readonly PropertyKey<int> DesiredAmountOfAdultsKey = new (nameof(_desiredAmountOfAdults));
+    private static readonly PropertyKey<int> DesiredAmountOfChildrenKey = new (nameof(_desiredAmountOfChildren));
+    private static readonly PropertyKey<int> DesiredAmountOfGolemsKey = new (nameof(_desiredAmountOfGolems));
+    private static readonly PropertyKey<Priority> PriorityKey = new (nameof(Priority));
 
     private int _desiredAmountOfAdults { get; set; }
     private int _desiredAmountOfChildren { get; set; }
@@ -23,13 +22,8 @@ public class DesiredBeavers : MonoBehaviour, IPersistentEntity, IRegisteredCompo
     public int DesiredAmountOfChildren => _desiredAmountOfChildren;
     public int DesiredAmountOfGolems => _desiredAmountOfGolems;
     
-    public event EventHandler<PriorityChangedEventArgs> PriorityChanged;
-    public Priority Priority { get; private set; } = Priority.Normal;
-    
-    public DesiredBeavers(EntityComponentRegistry entityComponentRegistry)
-    {
-        _entityComponentRegistry = entityComponentRegistry;
-    }
+    public event EventHandler<PriorityChangedEventArgs> PriorityChanged; 
+    public Priority Priority { get; set; } = Priority.Normal;
 
     public void ChangeDesiredAmountOfAdults(int newValue)
     {
@@ -52,6 +46,7 @@ public class DesiredBeavers : MonoBehaviour, IPersistentEntity, IRegisteredCompo
         component.Set(DesiredAmountOfAdultsKey, _desiredAmountOfAdults);
         component.Set(DesiredAmountOfChildrenKey, _desiredAmountOfChildren);
         component.Set(DesiredAmountOfGolemsKey, _desiredAmountOfGolems);
+        component.Set(PriorityKey, Priority);
     }
     
     public void Load(IEntityLoader entityLoader)
@@ -73,29 +68,21 @@ public class DesiredBeavers : MonoBehaviour, IPersistentEntity, IRegisteredCompo
         {
             _desiredAmountOfGolems = component.Get(DesiredAmountOfGolemsKey);
         }
+        if (component.Has(PriorityKey))
+        {
+            Priority = component.Get(PriorityKey);
+        }
     }
     
     public void SetPriority(Priority priority)
     {
-        if (priority == this.Priority)
+        if (priority == Priority)
             return;
-        Priority priority1 = this.Priority;
-        this.Priority = priority;
+        Priority priority1 = Priority;
+        Priority = priority;
         EventHandler<PriorityChangedEventArgs> priorityChanged = PriorityChanged;
         if (priorityChanged == null)
             return;
-        priorityChanged((object) this, new PriorityChangedEventArgs(priority1));
+        priorityChanged( this, new PriorityChangedEventArgs(priority1));
     }
-    
-    // public void OnEnterFinishedState()
-    // {
-    //     base.enabled = true;
-    //     _entityComponentRegistry.Register(this);
-    // }
-    //
-    // public void OnExitFinishedState()
-    // {
-    //     base.enabled = false;
-    //     _entityComponentRegistry.Unregister(this);
-    // }
 }
