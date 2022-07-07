@@ -25,6 +25,8 @@ public class DesiredBeavers : MonoBehaviour, IPersistentEntity, IRegisteredCompo
     public event EventHandler<PriorityChangedEventArgs> PriorityChanged; 
     public Priority Priority { get; set; } = Priority.Normal;
 
+    private readonly EnumObjectSerializer<Priority> _prioritySerializer = new ();
+
     public void ChangeDesiredAmountOfAdults(int newValue)
     {
          _desiredAmountOfAdults = newValue;
@@ -42,11 +44,11 @@ public class DesiredBeavers : MonoBehaviour, IPersistentEntity, IRegisteredCompo
     
     public void Save(IEntitySaver entitySaver)
     {
-        IObjectSaver component = entitySaver.GetComponent(DesiredBeaversKey);
+        var component = entitySaver.GetComponent(DesiredBeaversKey);
         component.Set(DesiredAmountOfAdultsKey, _desiredAmountOfAdults);
         component.Set(DesiredAmountOfChildrenKey, _desiredAmountOfChildren);
         component.Set(DesiredAmountOfGolemsKey, _desiredAmountOfGolems);
-        component.Set(PriorityKey, Priority);
+        component.Set(PriorityKey, Priority, _prioritySerializer);
     }
     
     public void Load(IEntityLoader entityLoader)
@@ -55,7 +57,7 @@ public class DesiredBeavers : MonoBehaviour, IPersistentEntity, IRegisteredCompo
         {
             return;
         }
-        IObjectLoader component = entityLoader.GetComponent(DesiredBeaversKey);
+        var component = entityLoader.GetComponent(DesiredBeaversKey);
         if (component.Has(DesiredAmountOfAdultsKey))
         {
             _desiredAmountOfAdults = component.Get(DesiredAmountOfAdultsKey);
@@ -70,7 +72,7 @@ public class DesiredBeavers : MonoBehaviour, IPersistentEntity, IRegisteredCompo
         }
         if (component.Has(PriorityKey))
         {
-            Priority = component.Get(PriorityKey);
+            Priority = component.Get(PriorityKey, _prioritySerializer);
         }
     }
     
@@ -78,11 +80,9 @@ public class DesiredBeavers : MonoBehaviour, IPersistentEntity, IRegisteredCompo
     {
         if (priority == Priority)
             return;
-        Priority priority1 = Priority;
+        var priority1 = Priority;
         Priority = priority;
-        EventHandler<PriorityChangedEventArgs> priorityChanged = PriorityChanged;
-        if (priorityChanged == null)
-            return;
-        priorityChanged( this, new PriorityChangedEventArgs(priority1));
+        var priorityChanged = PriorityChanged;
+        priorityChanged?.Invoke( this, new PriorityChangedEventArgs(priority1));
     }
 }

@@ -130,23 +130,22 @@ public class BeaverMigrationController : ISaveableSingleton, ILoadableSingleton
     
     public void Save(ISingletonSaver singletonSaver)
     {
-        IObjectSaver singleton = singletonSaver.GetSingleton(BeaverMigrationControllerKey);
+        var singleton = singletonSaver.GetSingleton(BeaverMigrationControllerKey);
         singleton.Set(ControllerEnabledKey, ControllerEnabled);
     }
     
     public void Load()
     {
-        ISingletonLoader singletonLoader = _singletonLoader;
-        if (!singletonLoader.HasSingleton(BeaverMigrationControllerKey))
+        _eventBus.Register(this);
+        
+        if (!_singletonLoader.HasSingleton(BeaverMigrationControllerKey))
         {
             return;
         }
-        IObjectLoader singleton = singletonLoader.GetSingleton(BeaverMigrationControllerKey);
+        var singleton = _singletonLoader.GetSingleton(BeaverMigrationControllerKey);
         if (singleton.Has(ControllerEnabledKey))
         {
             ControllerEnabled = singleton.Get(ControllerEnabledKey);
         }
-
-        _eventBus.Register(this);
     }
 }

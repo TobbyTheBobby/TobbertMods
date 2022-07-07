@@ -37,7 +37,7 @@ namespace AutomaticBeaverMigration
         
             public EntityPanelModule Get()
             {
-                EntityPanelModule.Builder builder = new EntityPanelModule.Builder();
+                var builder = new EntityPanelModule.Builder();
                 builder.AddMiddleFragment(_automaticBeaverMigrationUI);
                 return builder.Build();
             }

@@ -44,6 +44,11 @@ In case you experience problems, message me in modding channel of the the Timber
 
 ## Changelog
 
+### 1.0.1 - 7.7.2022
+
+- Updated to be compatible with the experimental update on 6.7.2022.
+- Small removals and changes to the code.
+
 ### 1.0.0 - 25.6.2022
 
 - Fixed a bug related to the migration of golems.

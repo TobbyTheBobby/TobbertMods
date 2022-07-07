@@ -45,8 +45,7 @@ namespace AutomaticBeaverMigration
             BeaverMigrationController beaverMigrationController, 
             InputService inputService, 
             WorkplacePriorityToggleFactory workplacePriorityToggleFactory, 
-            TooltipRegistrar tooltipRegistrar,
-            VisualElementLoader visualElementLoader)
+            TooltipRegistrar tooltipRegistrar)
         {
             _builder = builder;
             _beaverMigrationController = beaverMigrationController;
@@ -109,11 +108,11 @@ namespace AutomaticBeaverMigration
             TextFields.InitializeIntTextField(_desiredNumberOfGolemsField, 0, midEditingCallback: (value => _desiredBeavers.ChangeDesiredAmountOfGolems(value)));
             _currentNumberOfGolems = _root.Q<Label>("MaxNumberOfGolems");
 
-            VisualElement visualElement = _root.Q<VisualElement>("Priorities");
+            var visualElement = _root.Q<VisualElement>("Priorities");
             _tooltipRegistrar.RegisterLocalizable(visualElement, "Work.PriorityTitle");
-            foreach (Priority priority1 in Priorities.Ascending)
+            foreach (var priority1 in Priorities.Ascending)
             {
-                Priority priority = priority1;
+                var priority = priority1;
                 _toggles.Add(_workplacePriorityToggleFactory.Create(priority, () => _desiredBeavers.Priority == priority, (value => SetPriority(priority, value)), visualElement));
             }
             
@@ -154,7 +153,7 @@ namespace AutomaticBeaverMigration
             UpdateToggles();
             _root.ToggleDisplayStyle(true);
             
-            DistrictPopulation districtPopulation = _sourceDistrict.DistrictPopulation;
+            var districtPopulation = _sourceDistrict.DistrictPopulation;
 
             _currentNumberOfAdults.text = " " + districtPopulation.NumberOfAdults;
             _currentNumberOfChildren.text = " " + districtPopulation.NumberOfChildren;
@@ -175,21 +174,21 @@ namespace AutomaticBeaverMigration
         
         public bool ProcessInput()
         {
-            int num1 = _desiredAdultsWasFocusedLastFrame ? 1 : 0;
+            var num1 = _desiredAdultsWasFocusedLastFrame ? 1 : 0;
             _desiredAdultsWasFocusedLastFrame = DesiredAdultsIsFocused;
             if (_desiredAdultsWasFocusedLastFrame)
             {
                 return num1 != 0;
             }
             
-            int num2 = _desiredChildrenWasFocusedLastFrame ? 1 : 0;
+            var num2 = _desiredChildrenWasFocusedLastFrame ? 1 : 0;
             _desiredChildrenWasFocusedLastFrame = DesiredChildrenIsFocused;
             if (_desiredChildrenWasFocusedLastFrame)
             {
                 return num2 != 0;
             }
             
-            int num3 = _desiredGolemsWasFocusedLastFrame ? 1 : 0;
+            var num3 = _desiredGolemsWasFocusedLastFrame ? 1 : 0;
             _desiredGolemsWasFocusedLastFrame = DesiredGolemsIsFocused;
             if (_desiredGolemsWasFocusedLastFrame)
             {
@@ -208,7 +207,7 @@ namespace AutomaticBeaverMigration
         
         private void UpdateToggles()
         {
-            foreach (PriorityToggle toggle in _toggles)
+            foreach (var toggle in _toggles)
                 toggle.UpdateState();
         }
     }
